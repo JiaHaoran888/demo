@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Grades</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h2>Student Grades</h2>
+
+    <!-- Form to update grades -->
+    <form method="POST" action="{{ url_for('courses') }}">
+        <label for="student_email">Student Email:</label>
+        <input type="text" id="student_email" name="student_email" required>
+        <label for="course_code">Course Code:</label>
+        <input type="text" id="course_code" name="course_code" required>
+        <label for="course_rev">Course Rev:</label>
+        <input type="number" id="course_rev" name="course_rev" required>
+        <label for="exam_type">Exam Type:</label>
+        <input type="text" id="exam_type" name="exam_type" required>
+        <label for="grade">Grade:</label>
+        <input type="number" id="grade" name="grade" placeholder="Leave empty to set grade to NULL">
+        <button type="submit">Update Grade</button>
+    </form>
+
+    <h3>Courses and Student Grades</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Student Email</th>
+                <th>Course Code</th>
+                <th>Course Rev</th>
+                <th>Exam Type</th>
+                <th>Grade</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for grade in grades %}
+            <tr>
+                <td>{{ grade[0] }}</td>
+                <td>{{ grade[1] }}</td>
+                <td>{{ grade[2] }}</td>
+                <td>{{ grade[3] }}</td>
+                <td>{{ grade[4] if grade[4] is not none else 'N/A' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('courses') }}">
+                        <input type="hidden" name="student_email" value="{{ grade[0] }}">
+                        <input type="hidden" name="course_code" value="{{ grade[1] }}">
+                        <input type="hidden" name="course_rev" value="{{ grade[2] }}">
+                        <input type="hidden" name="exam_type" value="{{ grade[3] }}">
+                        <input type="hidden" name="grade" value="">
+                        <button type="submit" class="remove-grade-button">Set Grade to NULL</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

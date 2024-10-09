@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .left {
+            width: 40%;
+        }
+        .right {
+            width: 55%;
+            position: relative;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        .links-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+        .links-container ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .links-container ul li {
+            margin-bottom: 10px;
+        }
+        .links-container ul li a {
+            text-decoration: none;
+            color: #007bff;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .links-container ul li a:hover {
+            text-decoration: underline;
+            color: #0056b3;
+        }
+        footer {
+            padding: 20px;
+            background-color: #f1f1f1;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Welcome to the School Management System</h1>
+
+    <div class="container">
+        <!-- Left side information -->
+        <div class="left">
+            <h2>Active Populations</h2>
+            <p>
+                {% for population in populations %}
+                <a href="{{ url_for('population', population_code=population[0], population_year=population[1], population_period=population[2]) }}">
+                    {{ population[0] }} - {{ population[1] }} {{ population[2] }} ({{ population[3] }} students)
+                </a><br>
+                {% endfor %}
+            </p>
+
+            <h2>Overall Attendance</h2>
+            <p>
+                {% for record in attendance %}
+                {{ record[0] }} - {{ record[1] }} {{ record[2] }} ({{ record[3] }}%)<br>
+                {% endfor %}
+            </p>
+
+            <h2>Date of Last Website Construction</h2>
+            <p>{{ last_build_date }}</p>
+        </div>
+
+        <!-- Right side charts -->
+        <div class="right">
+            <div class="chart-container">
+                <canvas id="studentsChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+            <div class="links-container">
+                <ul>
+                    <li><a href="{{ url_for('population', population_code='some_population_code', population_period='some_population_period', population_year='some_population_year') }}">Student Management</a></li>
+                    <li><a href="{{ url_for('courses') }}">Course-Grade Management</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <!-- Optional footer content -->
+    </footer>
+
+    <script>
+        // Pie chart: Student populations
+        const studentsData = {
+            labels: [
+                {% for population in populations %}
+                '{{ population[0] }} - {{ population[1] }} {{ population[2] }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Number of Students',
+                data: [
+                    {% for population in populations %}
+                    {{ population[3] }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        const studentsConfig = {
+            type: 'pie',
+            data: studentsData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + ' students';
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Bar chart: Overall attendance
+        const attendanceData = {
+            labels: [
+                {% for record in attendance %}
+                '{{ record[0] }} - {{ record[1] }} {{ record[2] }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Attendance Rate',
+                data: [
+                    {% for record in attendance %}
+                    {{ record[3] }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const attendanceConfig = {
+            type: 'bar',
+            data: attendanceData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw + '%';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
+
+        // Render charts
+        window.onload = function() {
+            const ctx1 = document.getElementById('studentsChart').getContext('2d');
+            new Chart(ctx1, studentsConfig);
+
+            const ctx2 = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(ctx2, attendanceConfig);
+        };
+    </script>
+</body>
+</html>
